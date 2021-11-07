@@ -15,6 +15,7 @@ AND phot_bp_rp_excess_factor > 1.0 + 0.015 * POW(bp_rp, 2)
 AND visibility_periods_used > 8
 Sources: https://gaia.aip.de/query/
 Improvments: More data needed we were limited with the data and information that the Interent could provide
+Contributors: Demetrios Dresios
 Copyright 2021, Vikramaditya Chandra, All rights reserved.
 """
 import matplotlib.pyplot as plt
