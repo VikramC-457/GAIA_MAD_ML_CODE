@@ -1,6 +1,10 @@
 """
 Imports needed for the code.
 """
+"""
+Code Written by: Vikramaditya Chandra 2021
+Contributers: Demetrios Dresios
+"""
 import numpy as np
 import pandas as pd
 from itertools import chain
