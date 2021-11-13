@@ -5,6 +5,9 @@ Imports needed for the code.
 Code Written by: Vikramaditya Chandra 2021
 Contributers: Demetrios Dresios
 """
+"""
+Script to get and clean data
+"""
 import numpy as np
 import pandas as pd
 from itertools import chain
@@ -19,17 +22,17 @@ import pandas as pd
 from sklearn.metrics import r2_score
 from scipy import stats
 import sklearn.metrics as sm
-defaults = [0] * 3
-data = []
-def reject_outliers(data):
+defaults = [0] * 3#needed for ignoring values that don't exsist
+data = []#array for storing data
+def reject_outliers(data):#Outlier Rejection Function
     m = 2
     u = np.mean(data)
     s = np.std(data)
     filtered = [e for e in data if (u - 2 * s < e < u + 2 * s)]
     return filtered
-def isNaN(num):
+def isNaN(num):#Checking if it is NaN(Not a Number)
     return num != num
-def HMS2deg(ra='', dec=''):
+def HMS2deg(ra='', dec=''):#Convert from form RA to Degree RA(Gaia Form)
   RA, DEC, rs, ds = '', '', 1, 1
   if ra:
     H, M, S, *_ = [float(i) for i in chain(ra.split(), defaults)]
@@ -42,7 +45,7 @@ def HMS2deg(ra='', dec=''):
     return (RA, DEC)
   else:
     return RA or DEC
-def HMS2degDEC(dec='', ra=''):
+def HMS2degDEC(dec='', ra=''):#Convert from form Dec to Degree Dec(Gaia Form)
      RA, DEC, rs, ds = '', '', 1, 1
      if dec:
        D, M, S, *_ = [float(i) for i in chain(dec.split(), defaults)]
@@ -56,38 +59,38 @@ def HMS2degDEC(dec='', ra=''):
      else:
        return RA or DEC
 count=1
-csv_file='test1.csv'
-data = pd.read_csv(csv_file, error_bad_lines=False)
-radata=data['R.A.']
-decdata=data['Dec.']
-agedata=data['Age(Myr)']
-diamaterdata=data['Diameter']
-ra=[]
-dec=[]
-age=[]
-csv_files=['M42.csv', 'Horsehead.csv', 'M93.csv', 'IrisTrain.csv']
-ages=[3, 6, 25, 0.055]
-diameter=[]
-gooddata=[]
-for i in range(len(radata)):
+csv_file='test1.csv'#Data Storing File for Gaia
+data = pd.read_csv(csv_file, error_bad_lines=False)#Ignore the bad lines
+radata=data['R.A.']#get RA
+decdata=data['Dec.']#get dec
+agedata=data['Age(Myr)']#get Age
+diamaterdata=data['Diameter']#get Diameter later converted to FOV
+ra=[]#cleaned RA
+dec=[]#cleaned Dec
+age=[]#Cleaned age
+csv_files=['M42.csv', 'Horsehead.csv', 'M93.csv', 'IrisTrain.csv']#Pre exsisting data
+ages=[3, 6, 25, 0.055]#pre exsisting data's age
+diameter=[]#Diameter cleaned data
+gooddata=[]#Overall data storage for cleaned data
+for i in range(len(radata)):#cleaning RA data and converting
     if(isNaN(radata[i])):
         ra.append(0)
     else:
         ra.append(HMS2deg(radata[i]))
 print(ra)
-for i in range(len(decdata)):
+for i in range(len(decdata)):#Cleaning Dec Data and converting
     if(isNaN(decdata[i])):
         dec.append(0)
     else:
         dec.append(HMS2degDEC(decdata[i]))
 print(dec)
-for i in range(len(diamaterdata)):
+for i in range(len(diamaterdata)):#cleaning diameter data and converting to FOV
     if(isNaN(diamaterdata[i])):
         diameter.append(0)
     else:
         diameter.append(((diamaterdata[i])/3600)*100)
 print(diameter)
-for i in range(len(ra)):
+for i in range(len(ra)):#Modified Query for each object
     query1="""    SELECT bp_rp, parallax, pmra, pmdec, phot_g_mean_mag AS gp
     FROM gaiadr2.gaia_source
     WHERE 1 = CONTAINS(POINT('ICRS', ra, dec),
@@ -101,18 +104,23 @@ for i in range(len(ra)):
     """
     print(query1)
     query1=query1+string2
-    try:
-        job = Gaia.launch_job(query1)
+    try:#Try the following code
+        job = Gaia.launch_job(query1)#Launch query to gaia webpage
         print(job)
-        results = job.get_results()
+        results = job.get_results()#get results
         ascii.write(results, 'values'+str(count)+'.csv', format='csv', fast_writer=False)
-        csv_files.append('values'+str(count)+'.csv')
+        csv_files.append('values'+str(count)+'.csv')#store in CSV
         ages.append(agedata[i])
         print(ages)
-        count+=1
-    except:
+        count+=1#avoid re-writing CSV file by creating different ones
+    except:#If the code throws any error, usually 'can't query' it will ignore the file, another filter to clean out any useless or bad data
         continue
-#1,
+"""
+End of Cleaning and Gathering Data
+"""
+"""
+Training and Creating Model with the data
+"""
 arr2=[]
 datasetY=[]
 datasetX=[]
@@ -164,12 +172,12 @@ Plotting data and Traning
 """
 ages3=[]
 MAD2=[]
-ages2 = [4000 if math.isnan(i) else i for i in ages]
+ages2 = [4000 if math.isnan(i) else i for i in ages]#ignore any age nan values
 for i in range(len(ages2)):
     ages3.append(float(ages2[i]))
 print(ages3)
 print(MAD)
-MAD=[1.5 if math.isnan(i) else i for i in MAD]
+MAD=[1.5 if math.isnan(i) else i for i in MAD]#ignore any MAD computation error values
 for i in range(len(MAD)):
     MAD2.append(float(MAD[i]))
 fig = plt.figure()
@@ -177,8 +185,10 @@ ax1 = fig.add_subplot('111')
 ax1.scatter(ages3, MAD2, color='blue')
 plt.ylim(-5,5)
 polyline = np.linspace(-5, 9000, 20)
-mod1 = np.poly1d(np.polyfit(ages3, MAD2, 2))#Train for a function of degree 3
+mod1 = np.poly1d(np.polyfit(ages3, MAD2, 2))#Train for a function of degree 2
 ax1.plot(polyline,mod1(polyline), color='red')
-predict = np.poly1d(mod1)
-print(mod1)
+print(mod1)#print model
 plt.show()
+"""
+End of Training and Creating model/End of Script
+"""
