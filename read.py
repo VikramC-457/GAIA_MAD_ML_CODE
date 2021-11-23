@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from itertools import chain
 from astroquery.gaia import Gaia
+from pynverse import inversefunc
 from astropy.io import ascii
 import wget
 import requests
@@ -110,7 +111,7 @@ for i in range(len(ra)):#Modified Query for each object
         results = job.get_results()#get results
         ascii.write(results, 'values'+str(count)+'.csv', format='csv', fast_writer=False)
         csv_files.append('values'+str(count)+'.csv')#store in CSV
-        ages.append(agedata[i])
+        ages.append(agedata[i])#append data
         print(ages)
         count+=1#avoid re-writing CSV file by creating different ones
     except:#If the code throws any error, usually 'can't query' it will ignore the file, another filter to clean out any useless or bad data
@@ -151,6 +152,7 @@ needed for scipy modeling, polyfit was more accurate
 """
 Line 59-68 checks if CSV data is NAN if it is it will ignore the value and only take the data that can be used
 """
+count=0
 for i in range(len(csv_files)):
     data=pd.read_csv(csv_files[i])
     arr=data['gp']
@@ -158,35 +160,41 @@ for i in range(len(csv_files)):
     for i in range(len(arr2)):
         if(isNaN(arr2[i])):
             continue
-        else:
+        elif(13<=arr[i]<=19):
             datasetX.append(arr2[i])
             datasetY.append(arr[i])
+            count+=1
     mad=stats.median_absolute_deviation(datasetY)#Calculate MAD for Magnitude
     mad2=stats.median_absolute_deviation(datasetX)#Calculate MAD for Color
     madav=(mad+mad2)/2#Total MAD
-    MAD.append(madav)#Appending to an Array for training and plotting
+    MAD.append(count)#Appending to an Array for training and plotting
     datasetX.clear()#Clearing for next Iteration
     datasetY.clear()#Clearing for next Iteration
+    count=0
 """
 Plotting data and Traning
 """
 ages3=[]
 MAD2=[]
 ages2 = [4000 if math.isnan(i) else i for i in ages]#ignore any age nan values
-for i in range(len(ages2)):
-    ages3.append(float(ages2[i]))
-print(ages3)
-print(MAD)
+print(len(ages3))
+print(len(MAD))
 MAD=[1.5 if math.isnan(i) else i for i in MAD]#ignore any MAD computation error values
 for i in range(len(MAD)):
-    MAD2.append(float(MAD[i]))
+    if(-500<=MAD[i]<=1500 and -25<=ages2[i]<170 or (100<=MAD[i]<=1262) and (278<=ages2[i]<=5067) or (-20<=MAD[i]<=20) and (3900<=ages2[i]<=4100) or (2642<=MAD[i]<=4750) and (0<=ages2[i]<=200) or (7800<=MAD[i]<=315800) and (0<=ages2[i]<=20)):
+        continue
+    else:
+        ages3.append(float(ages2[i]))
+        MAD2.append(float(MAD[i]))
 fig = plt.figure()
 ax1 = fig.add_subplot('111')
 ax1.scatter(ages3, MAD2, color='blue')
-plt.ylim(-5,5)
+plt.ylim(-7800,315800)
 polyline = np.linspace(-5, 9000, 20)
 mod1 = np.poly1d(np.polyfit(ages3, MAD2, 2))#Train for a function of degree 2
+predict = np.poly1d(mod1)
 ax1.plot(polyline,mod1(polyline), color='red')
+print(np.interp(0.795, mod1(polyline),polyline))
 print(mod1)#print model
 plt.show()
 """
