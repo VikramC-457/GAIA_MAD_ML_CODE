@@ -181,7 +181,7 @@ print(len(ages3))
 print(len(MAD))
 MAD=[1.5 if math.isnan(i) else i for i in MAD]#ignore any MAD computation error values
 for i in range(len(MAD)):
-    if(-500<=MAD[i]<=1500 and -25<=ages2[i]<170 or (100<=MAD[i]<=1262) and (278<=ages2[i]<=5067) or (-20<=MAD[i]<=20) and (3900<=ages2[i]<=4100) or (2642<=MAD[i]<=4750) and (0<=ages2[i]<=200) or (7800<=MAD[i]<=315800) and (0<=ages2[i]<=20)):
+    if(-500<=MAD[i]<=1500 and -25<=ages2[i]<170 or (100<=MAD[i]<=1262) and (278<=ages2[i]<=5067) or (-20<=MAD[i]<=20) and (3900<=ages2[i]<=4100) or (2642<=MAD[i]<=4750) and (0<=ages2[i]<=200) or (7800<=MAD[i]<=315800) and (0<=ages2[i]<=20)):#Manual Rejection
         continue
     else:
         ages3.append(float(ages2[i]))
@@ -191,7 +191,7 @@ ax1 = fig.add_subplot('111')
 ax1.scatter(ages3, MAD2, color='blue')
 plt.ylim(-7800,315800)
 polyline = np.linspace(-5, 9000, 20)
-mod1 = np.poly1d(np.polyfit(ages3, MAD2, 2))#Train for a function of degree 2
+mod1 = np.poly1d(np.polyfit(ages3, MAD2, 2))#Train for a function of degree 2(Loss of energy, expected degree polynomial) 
 predict = np.poly1d(mod1)
 ax1.plot(polyline,mod1(polyline), color='red')
 print(np.interp(0.795, mod1(polyline),polyline))
