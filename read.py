@@ -160,7 +160,7 @@ for i in range(len(csv_files)):
     for i in range(len(arr2)):
         if(isNaN(arr2[i])):
             continue
-        elif(13<=arr[i]<=19):
+        elif(13<=arr[i]<=19 and 0<arr2[i]<0.7):
             datasetX.append(arr2[i])
             datasetY.append(arr[i])
             count+=1
