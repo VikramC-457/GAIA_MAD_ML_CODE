@@ -176,7 +176,7 @@ Plotting data and Traning
 """
 ages3=[]
 MAD2=[]
-ages2 = [4000 if math.isnan(i) else i for i in ages]#ignore any age nan values
+ages2 = [0 if math.isnan(i) else i for i in ages]#ignore any age nan values
 print(len(ages3))
 print(len(MAD))
 MAD=[1.5 if math.isnan(i) else i for i in MAD]#ignore any MAD computation error values
